@@ -4,7 +4,7 @@ The system design was written and pushed before implementation. This record dist
 
 ## Automated checks
 
-The completed trial passed 31 automated tests when the local CCDI source and live demo URL were supplied, plus the browser publication/mobile check. Without the live URL, three protocol tests skip; without company reference assets, two asset-specific tests also skip.
+The completed trial passed 32 automated tests when the local CCDI source and live demo URL were supplied, plus the browser publication/mobile check. Without the live URL, three protocol tests skip; without company reference assets, two asset-specific tests also skip. Permission regression coverage includes ownership changes and reviewer-role revocation.
 
 * HTTP workflow tests exercise private access by direct URL, draft and asset editing, conflicting writes, independent review, invalid transitions, immutable publication, private historical versions, visibility reduction, archive, deletion/restore, CSRF and loopback restrictions.
 * Connector tests exercise no download before approval, declined installs, cache integrity repair, updates, renewed approval for changed dependencies, offline failure, and the configuration shapes for Codex, Cursor, and VS Code Copilot.

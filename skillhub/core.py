@@ -192,7 +192,7 @@ class Store:
         r = db.execute("SELECT * FROM versions WHERE id=?", (vid,)).fetchone()
         require(r, "Version not found", 404)
         s = self.skill_row(db, r["skill_id"], user)
-        privileged = user["id"] in (s["owner_id"], r["reviewer_id"]) or user["role"] == "admin"
+        privileged = user["id"] == s["owner_id"] or user["role"] == "admin" or (user['role'] == 'reviewer' and user['id'] == r['reviewer_id'])
         require(privileged or (r["state"] in ("published", "deprecated") and r['visibility'] == 'company' and s["visibility"] == "company"), "Version not found", 404)
         v = dict(r)
         v["files"] = json.loads(v["files"])
@@ -259,7 +259,7 @@ class Store:
                 except HubError:
                     continue
                 s["owner_name"] = db.execute("SELECT name FROM users WHERE id=?", (s["owner_id"],)).fetchone()[0]
-                privileged = s["owner_id"] == user["id"] or user["role"] == "admin" or db.execute("SELECT 1 FROM versions WHERE skill_id=? AND reviewer_id=?", (s["id"],user["id"])).fetchone()
+                privileged = s["owner_id"] == user["id"] or user["role"] == "admin" or (user['role'] == 'reviewer' and db.execute("SELECT 1 FROM versions WHERE skill_id=? AND reviewer_id=?", (s["id"],user["id"])).fetchone())
                 s["states"] = [r[0] for r in db.execute("SELECT DISTINCT state FROM versions WHERE skill_id=?", (s["id"],))] if privileged else [db.execute("SELECT state FROM versions WHERE id=?", (s["current_id"],)).fetchone()[0]]
                 s["current_label"] = (db.execute("SELECT label FROM versions WHERE id=?", (s["current_id"],)).fetchone() or [None])[0]
                 rows.append(s)
@@ -276,9 +276,9 @@ class Store:
                         s["versions"].append(v)
                     except HubError:
                         pass
-            privileged = user["role"] == "admin" or user["id"] == s["owner_id"] or any(v["reviewer_id"] == user["id"] for v in s["versions"])
+            privileged = user["role"] == "admin" or user["id"] == s["owner_id"] or (user['role'] == 'reviewer' and any(v["reviewer_id"] == user["id"] for v in s["versions"]))
             s["audit"] = [dict(r) for r in db.execute("SELECT audit.*,users.name AS actor FROM audit JOIN users ON users.id=audit.actor_id WHERE skill_id=? ORDER BY audit.id DESC LIMIT 100", (sid,))] if privileged else []
-            s["reviews"] = [dict(r) for r in db.execute("SELECT reviews.*,users.name AS actor FROM reviews JOIN users ON users.id=reviews.actor_id JOIN versions ON versions.id=reviews.version_id WHERE versions.skill_id=? ORDER BY reviews.created_at DESC", (sid,))] if user["role"] == "admin" or user["id"] == s["owner_id"] or any(v["reviewer_id"] == user["id"] for v in s["versions"]) else []
+            s["reviews"] = [dict(r) for r in db.execute("SELECT reviews.*,users.name AS actor FROM reviews JOIN users ON users.id=reviews.actor_id JOIN versions ON versions.id=reviews.version_id WHERE versions.skill_id=? ORDER BY reviews.created_at DESC", (sid,))] if privileged else []
             return s
 
     def new_version(self, sid, user, label):

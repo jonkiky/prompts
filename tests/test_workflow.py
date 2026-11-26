@@ -192,6 +192,22 @@ def test_ownership_transfer_revokes_old_owner_and_restarts_review(client):
     assert c.get('/api/skills/'+sid).status_code==404
 
 
+def test_demoted_reviewer_loses_unpublished_access(client):
+    c=client;login(c);s=publish(c,create(c));sid=s['id']
+    s=c.post('/api/skills/'+sid+'/versions',json={'label':'1.1.0'}).json();v=s['versions'][0]
+    reviewer=next(u for u in c.get('/api/users').json() if u['role']=='reviewer')
+    c.post('/api/versions/'+v['id']+'/actions',json={'action':'submit','revision':v['revision'],'reviewer_id':reviewer['id']})
+    login(c,'reviewer@example.test')
+    assert c.get('/api/versions/'+v['id']+'/file',params={'path':'SKILL.md'}).status_code==200
+    login(c,'admin@example.test')
+    assert c.patch('/api/users/'+reviewer['id'],json={'role':'employee'}).status_code==200
+    login(c,'reviewer@example.test')
+    assert c.get('/api/versions/'+v['id']+'/file',params={'path':'SKILL.md'}).status_code==404
+    detail=c.get('/api/skills/'+sid).json()
+    assert len(detail['versions'])==1 and detail['audit']==[] and detail['reviews']==[]
+    assert c.get('/api/skills').json()[0]['states']==['published']
+
+
 def test_real_ccdi_import(client):
     import os
     from pathlib import Path
