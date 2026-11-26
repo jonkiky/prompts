@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+.env
+.env.*
+!.env.example
+data/
+.hub-cache/
+.integrations/
+artifacts/
+*.egg-info/
+~$*
+Company_Skill_Hub_PRD_and_Implementation*.docx
