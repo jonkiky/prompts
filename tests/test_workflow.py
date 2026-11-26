@@ -87,6 +87,29 @@ def test_stale_edits_and_immutable_release(client):
     assert c.put('/api/versions/'+v['id']+'/file',json={'revision':v['revision'],'path':'x.txt','content':'tamper'}).status_code==409
 
 
+def test_personal_release_is_only_discoverable_by_owner(client):
+    c=client;login(c);personal=publish(c,create(c),visibility='private')
+    assert any(s['id']==personal['id'] for s in c.get('/api/catalog').json())
+    auth=token(c)
+    assert any(s['id']==personal['id'] for s in c.get('/api/catalog',headers=auth).json())
+    login(c,'employee@example.test')
+    assert c.get('/api/skills/'+personal['id']).status_code==404
+    assert all(s['id']!=personal['id'] for s in c.get('/api/catalog').json())
+
+
+def test_rollback_rejected_without_changing_release(client):
+    c=client;login(c);skill=publish(c,create(c));first=skill['current_id']
+    skill=c.post('/api/skills/'+skill['id']+'/versions',json={'label':'1.1.0'}).json()
+    skill=publish(c,skill)
+    login(c,'admin@example.test')
+    before=c.get('/api/skills/'+skill['id']).json()
+    r=c.post('/api/skills/'+skill['id']+'/actions',json={'action':'rollback','revision':before['revision'],'target':first,'comment':'Try old version'})
+    assert r.status_code==422
+    after=c.get('/api/skills/'+skill['id']).json()
+    assert after['current_id']==before['current_id']!=first
+    assert after['revision']==before['revision'] and after['audit']==before['audit']
+
+
 def test_review_reopen_invalidation(client):
     c=client;login(c);s=create(c);v=s['versions'][0]
     assert c.post('/api/versions/'+v['id']+'/actions',json={'action':'publish','revision':0}).status_code==409

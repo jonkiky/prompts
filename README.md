@@ -1,6 +1,6 @@
 # Company Skill Hub
 
-An internal management portal for reusable agent skills, with a local MCP connector for **Codex, Cursor, and GitHub Copilot in VS Code**. Create or import ZIP packages, edit files, request independent review, publish private or company releases, manage versions, and retire or restore skills.
+An internal management portal for reusable agent skills, with a local MCP connector for **Codex, Cursor, and GitHub Copilot in VS Code**. Create or import ZIP packages, edit files, request independent review, publish Personal or Organization releases, manage versions, and retire or restore skills. The black-and-white portal uses compact navigation, a searchable skill table, and a split editing workspace inspired by Langfuse.
 
 The [system design](docs/system-design.md) was committed before application implementation. [OpenAPI](docs/openapi.json) describes the HTTP interface; `/docs` exposes the same contract while running.
 
@@ -15,6 +15,14 @@ python3 -m venv .venv
 ```
 
 Open [the local portal](http://127.0.0.1:8765). Demo mode binds only to loopback and offers four sample identities. Jordan is the author, Morgan the reviewer, Sam the administrator, and Riley another employee. Demonstration decisions are not company authorization.
+
+For generic sample content alongside CCDI, run:
+
+```sh
+.venv/bin/python -m skillhub seed-demo
+```
+
+This adds **Project Briefing (Demo)** and **Code Review Checklist (Demo)** at the Organization level, plus **Personal Writing Notes (Demo)** as Jordan's Personal draft. Repeating the command preserves edited and deleted samples. It is disabled outside demo mode and does not require the company CCDI assets.
 
 ## Import the first CCDI skill
 
@@ -54,7 +62,9 @@ First preparation returns an approval link. The matching employee must approve i
 
 Create or ZIP-import → edit the private draft → select a reviewer → submit → approve as a different user → publish the exact approved revision. Files, release notes, dependency metadata, and audience are bound to that approval. Reopening a review invalidates approval. Published files are immutable; **New version** starts a separate draft while the current release remains available.
 
-Company visibility requires reviewed publication; **Make private now** narrows access immediately. Version history supports ZIP export, deprecation, archiving, and administrator rollback. Deleting is soft; an administrator can find deleted skills under Lifecycle and restore them. Narrowing access cannot recall files already downloaded or instructions already in a conversation.
+**Personal** skills are private to their owner, authorized reviewers, and administrators. **Organization** releases are shared with authenticated employees after reviewed publication. Use the level tabs in the library to filter either group; **My skills** includes everything you own. The API retains `private` and `company` audience values for compatibility. Drafts request their next level in **Settings → Requested skill level**; that request does not change access before publication. Published Personal releases are discoverable by their owner through the connector.
+
+**Make personal now** narrows access immediately. Version history supports inspection, ZIP export, deprecation, and archiving. There is no rollback action. Publish a new reviewed version when content needs to change. Deleting is soft; an administrator can find deleted skills under Lifecycle and restore them. Narrowing access cannot recall files already downloaded or instructions already in a conversation.
 
 ## Authentication and deployment
 

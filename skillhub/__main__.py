@@ -10,10 +10,10 @@ from .core import HubError, parse_skill, require
 
 FINDER = """---
 name: company-skill-finder
-description: Discover approved company workflows for specialized tasks, including CCDI presentations. Use before starting a task that may have an organizational workflow.
+description: Discover released Personal skills and approved Organization workflows, including CCDI presentations. Use before starting a task that may have a saved workflow.
 ---
 
-Use company_skill_hub list_skills to inspect available company workflows. Select a skill only when its description fits the request. Call prepare_skill for the selected ID before every use, including follow-up work; the connector checks the approved version and access policy. If approval is pending, show the employee the approval link and wait for their decision. Do not make the decision for the employee. When ready, read the returned SKILL.md and supporting files using the returned directory as the base. Respect the current user's instructions and existing permissions. If a dependency or connection is unavailable, explain it and offer to proceed without the company skill. Do not read a remembered cached path without preparing it again.
+Use company_skill_hub list_skills to inspect the employee's released Personal skills and shared Organization workflows. Select a skill only when its description fits the request. Call prepare_skill for the selected ID before every use, including follow-up work; the connector checks the approved version and access policy. If approval is pending, show the employee the approval link and wait for their decision. Do not make the decision for the employee. When ready, read the returned SKILL.md and supporting files using the returned directory as the base. Respect the current user's instructions and existing permissions. If a dependency or connection is unavailable, explain it and offer to proceed without the skill. Do not read a remembered cached path without preparing it again.
 """
 
 
@@ -70,6 +70,8 @@ def main():
     setup.add_argument("--source", type=Path, required=True)
     setup.add_argument("--portable", action="store_true")
     setup.add_argument("--data", default=os.getenv("HUB_DATA", "data"))
+    samples = sub.add_parser("seed-demo", help="Add generic organization skills and a personal draft in demo mode")
+    samples.add_argument("--data", default=os.getenv("HUB_DATA", "data"))
     configure = sub.add_parser("config")
     configure.add_argument("client", choices=("codex", "cursor", "copilot"))
     configure.add_argument("--url", default="http://127.0.0.1:8765")
@@ -83,6 +85,10 @@ def main():
         uvicorn.run(create_app(), host=args.host, port=args.port)
     elif args.command == "seed":
         seed(args.source, args.data, args.portable)
+    elif args.command == "seed-demo":
+        from .demo import seed_demo
+        created = seed_demo(args.data)
+        print(f"Added {len(created)} sample skills; existing samples were preserved.")
     else:
         from .connector import config
         text = config(args.client, args.url, args.token_file)

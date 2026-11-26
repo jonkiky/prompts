@@ -398,13 +398,6 @@ class Store:
                 # A new owner must resubmit pending work to an independent reviewer.
                 db.execute("UPDATE versions SET state='draft',reviewer_id=NULL,approved_hash=NULL,approved_revision=NULL,revision=revision+1 WHERE skill_id=? AND state IN ('draft','in_review','approved')", (sid,))
                 reason = 'Ownership transferred to ' + target
-            elif action == "rollback":
-                require(user["role"] == "admin" and reason.strip(), "Administrator and reason are required", 403)
-                v = db.execute("SELECT * FROM versions WHERE id=? AND skill_id=? AND state='published'", (target, sid)).fetchone()
-                require(v, "Choose an eligible published version", 422)
-                # A rollback cannot widen the current audience without a new review.
-                visibility = "private" if s["visibility"] == "private" else v["visibility"]
-                db.execute("UPDATE skills SET current_id=?,visibility=? WHERE id=?", (target, visibility, sid))
             else:
                 raise HubError(422, "Unknown skill action")
             db.execute("UPDATE skills SET revision=revision+1,updated_at=? WHERE id=?", (now(), sid))
