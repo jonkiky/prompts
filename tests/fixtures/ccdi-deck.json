@@ -1,0 +1,6 @@
+{
+  "slides": [
+    {"kind":"cover", "title":"Company Skill Hub", "subtitle":"Editable workflow demonstration", "date":"November 2026", "notes":"Demonstration only. This is a layout and editability check."},
+    {"kind":"flow", "title":"From a draft to a trusted company workflow", "nodes":[{"label":"Create", "detail":"Author instructions and add reference assets"},{"label":"Review", "detail":"An independent reviewer checks the exact revision"},{"label":"Publish", "detail":"Make the approved workflow discoverable"}], "takeaway":"The approved revision becomes the shared release", "notes":"A demonstration of the application's review workflow, using no external business claims."}
+  ]
+}

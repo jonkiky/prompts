@@ -1,0 +1,1 @@
+"""Company Skill Hub."""

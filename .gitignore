@@ -9,7 +9,9 @@ __pycache__/
 data/
 .hub-cache/
 .integrations/
+.tokens/
 artifacts/
+node_modules/
 *.egg-info/
 ~$*
 Company_Skill_Hub_PRD_and_Implementation*.docx

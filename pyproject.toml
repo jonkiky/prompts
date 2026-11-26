@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "company-skill-hub"
+version = "0.1.0"
+description = "Internal skill management portal and MCP connector"
+requires-python = ">=3.11"
+dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.34,<1", "httpx>=0.28,<1", "PyYAML>=6,<7", "python-multipart>=0.0.20", "mcp>=1.28,<2", "PyJWT[crypto]>=2.10,<3", "python-pptx>=1.0,<2"]
+
+[project.optional-dependencies]
+test = ["pytest>=7", "pytest-asyncio>=0.23"]
+
+[project.scripts]
+skillhub = "skillhub.__main__:main"
+
+[tool.setuptools.package-data]
+skillhub = ["static/*"]
+
+[tool.setuptools.packages.find]
+include = ["skillhub*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
