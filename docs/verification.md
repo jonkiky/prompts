@@ -4,6 +4,8 @@ The system design was written and pushed before implementation. This record dist
 
 ## Automated checks
 
+The completed trial passed 31 automated tests when the local CCDI source and live demo URL were supplied, plus the browser publication/mobile check. Without the live URL, three protocol tests skip; without company reference assets, two asset-specific tests also skip.
+
 * HTTP workflow tests exercise private access by direct URL, draft and asset editing, conflicting writes, independent review, invalid transitions, immutable publication, private historical versions, visibility reduction, archive, deletion/restore, CSRF and loopback restrictions.
 * Connector tests exercise no download before approval, declined installs, cache integrity repair, updates, renewed approval for changed dependencies, offline failure, and the configuration shapes for Codex, Cursor, and VS Code Copilot.
 * OIDC callback tests use signed test identity tokens and an isolated simulated provider. They cover state replay, nonce, signature, verified email, audience, expiration, and successful session creation. They do not verify a company's actual provider or role policy.

@@ -175,6 +175,23 @@ def test_archived_release_is_hidden_from_employee(client):
     assert c.get('/api/skills').json()==[]
 
 
+def test_ownership_transfer_revokes_old_owner_and_restarts_review(client):
+    c=client;login(c);s=create(c);sid=s['id'];v=s['versions'][0]
+    reviewer=next(u for u in c.get('/api/users').json() if u['role']=='reviewer')
+    c.post('/api/versions/'+v['id']+'/actions',json={'action':'submit','revision':0,'reviewer_id':reviewer['id']})
+    login(c,'admin@example.test')
+    recipient=next(u for u in c.get('/api/users').json() if u['email']=='employee@example.test')
+    s=c.get('/api/skills/'+sid).json()
+    r=c.post('/api/skills/'+sid+'/actions',json={'action':'transfer_owner','revision':s['revision'],'target':recipient['id']})
+    assert r.status_code==200,r.text
+    login(c,'employee@example.test')
+    transferred=c.get('/api/skills/'+sid).json()
+    assert transferred['owner_id']==recipient['id'] and transferred['versions'][0]['state']=='draft'
+    assert transferred['versions'][0]['reviewer_id'] is None
+    login(c)
+    assert c.get('/api/skills/'+sid).status_code==404
+
+
 def test_real_ccdi_import(client):
     import os
     from pathlib import Path

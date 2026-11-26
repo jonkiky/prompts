@@ -391,6 +391,13 @@ class Store:
                 db.execute("UPDATE skills SET deleted_at=NULL WHERE id=?", (sid,))
             elif action == "make_private":
                 db.execute("UPDATE skills SET visibility='private' WHERE id=?", (sid,))
+            elif action == "transfer_owner":
+                require(user['role'] == 'admin', 'Only administrators can transfer ownership', 403)
+                require(db.execute('SELECT 1 FROM users WHERE id=?', (target,)).fetchone(), 'Choose an existing employee', 422)
+                db.execute('UPDATE skills SET owner_id=? WHERE id=?', (target, sid))
+                # A new owner must resubmit pending work to an independent reviewer.
+                db.execute("UPDATE versions SET state='draft',reviewer_id=NULL,approved_hash=NULL,approved_revision=NULL,revision=revision+1 WHERE skill_id=? AND state IN ('draft','in_review','approved')", (sid,))
+                reason = 'Ownership transferred to ' + target
             elif action == "rollback":
                 require(user["role"] == "admin" and reason.strip(), "Administrator and reason are required", 403)
                 v = db.execute("SELECT * FROM versions WHERE id=? AND skill_id=? AND state='published'", (target, sid)).fetchone()
@@ -435,7 +442,8 @@ class Store:
                 v = db.execute("SELECT * FROM versions WHERE id=?", (s["current_id"],)).fetchone()
                 if not v or v["state"] not in ("published", "deprecated"):
                     continue
-                result.append({**dict(s), "version_id": v["id"], "version": v["label"], "package_hash": v["package_hash"], "state": v["state"], "meta": json.loads(v["meta"]), "inventory": json.loads(v["files"]), "owner_name": db.execute("SELECT name FROM users WHERE id=?", (s["owner_id"],)).fetchone()[0]})
+                retirement = db.execute("SELECT detail FROM audit WHERE version_id=? AND action='deprecate' ORDER BY id DESC LIMIT 1", (v['id'],)).fetchone()
+                result.append({**dict(s), "version_id": v["id"], "version": v["label"], "package_hash": v["package_hash"], "state": v["state"], "retirement_note": retirement[0] if retirement else None, "meta": json.loads(v["meta"]), "inventory": json.loads(v["files"]), "owner_name": db.execute("SELECT name FROM users WHERE id=?", (s["owner_id"],)).fetchone()[0]})
             if sid:
                 require(result, "No accessible current release", 404)
                 return result[0]

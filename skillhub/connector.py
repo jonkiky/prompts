@@ -100,7 +100,7 @@ class Connector:
             tmp_record = self.cache / (skill_id+".json.tmp")
             tmp_record.write_text(json.dumps(record, indent=2))
             os.replace(tmp_record, self.cache / (skill_id+".json"))
-            return {"status": "ready", **record, "skill_file": str(dest.resolve()/"SKILL.md"), "python": sys.executable, "lifecycle": release["state"], "note": "Read the local SKILL.md and supporting files. Installation grants no permission for external actions."}
+            return {"status": "ready", **record, "skill_file": str(dest.resolve()/"SKILL.md"), "python": sys.executable, "lifecycle": release["state"], "retirement_note": release.get('retirement_note'), "note": "Read the local SKILL.md and supporting files. Installation grants no permission for external actions."}
         finally:
             lock.rmdir()
 

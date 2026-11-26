@@ -26,6 +26,7 @@ const assert = require('assert');
   await page.getByRole('button',{name:'Settings',exact:true}).click();
   await page.getByLabel('Requested audience').selectOption('company');
   await page.getByLabel('Release notes').fill('First browser-verified company briefing workflow.');
+  await page.getByLabel('Next review date').fill('2000-01-01');
   await page.getByRole('button',{name:'Save release details'}).click();
   await page.getByRole('status').filter({hasText:'Release details saved'}).waitFor();
   await page.getByRole('button',{name:/Submit for review/}).click();
@@ -44,6 +45,9 @@ const assert = require('assert');
   await page.getByRole('status').filter({hasText:'Revision publish'}).waitFor();
   await page.getByRole('button',{name:'Versions',exact:true}).click();
   await page.getByRole('heading',{name:'Version history'}).waitFor();
+  await page.getByRole('link',{name:/Lifecycle/}).click();
+  await page.getByLabel('Filter state').selectOption('overdue');
+  await page.getByRole('link',{name:'Browser workflow verification',exact:true}).waitFor();
   // Remove only the synthetic fixture created by this check.
   await page.evaluate(async id=>{
     const me=await fetch('/api/me').then(r=>r.json());
