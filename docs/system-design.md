@@ -20,6 +20,16 @@ Build one Python application with FastAPI, server-delivered HTML, local CSS and 
 
 The user interface has a library, My Skills, a workbench with file tree and editor, a review queue, and version/audit history. The portal serves only authenticated requests. Static application assets contain no skill content. Skill binaries and source files are returned through authorized API handlers.
 
+### Portal visual design
+
+Use [Langfuse's prompt management interface](https://langfuse.com/docs/prompt-management/overview) as a layout reference: compact workspace navigation, a breadcrumb header, a searchable table of skills, and a split file/navigation and editing workspace. Use black text and primary actions, white surfaces, and neutral gray borders and secondary text throughout. Status labels must remain understandable without color. Keep the existing authoring, review, release, lifecycle, and connection flows; contain wide tables within a horizontally scrollable region on small screens. This changes the portal presentation only; CCDI presentation assets retain their own branding.
+
+### Personal and organization skills
+
+Expose two levels in the catalog: **Personal** maps to the existing `private` audience and **Organization** maps to `company`. Personal content stays private to its owner, authorized reviewers, and administrators; organization releases are discoverable by authenticated employees. New skills start at the Personal level. The release details form requests either level, and expanding to Organization still requires independent review and publication. These are access levels, not separate copies of a skill. Keep API audience values unchanged for existing connector compatibility.
+
+Demo mode supports an explicit, repeatable sample-seeding command for organization workflows and a personal draft. Samples use generic, editable instructions and carry demo provenance; they do not run automatically in company authentication mode. CCDI remains the first real imported skill. Version history is retained for inspection and export; rollback is outside the MVP. To reuse an older revision, create and review a new version.
+
 ## Identity and permissions
 
 Support two explicit authentication modes:
@@ -53,7 +63,7 @@ Persist files per version outside the web root. Each publication has determinist
 3. Submit a frozen revision with a requested audience and changelog. Assign a reviewer. Submission validates references and creates a content digest.
 4. The reviewer sees every file, textual changes against the current release, binary changes, and prior comments. Approve or request changes. A return to Draft preserves review history; later edits invalidate earlier approval.
 5. Publish only the approved revision and approved audience. Store package bytes first, then atomically update version state, visibility, current pointer, and audit event. An existing published version continues serving while a replacement is drafted.
-6. Widening visibility requires review of that audience, even if bytes are unchanged. Reducing visibility is immediate. Rollback can select an earlier published, eligible release. Deprecation warns; archiving blocks connector use. Deletion is soft and administrator-restorable.
+6. Widening visibility requires review of that audience, even if bytes are unchanged. Reducing visibility is immediate. Deprecation warns; archiving blocks connector use. Deletion is soft and administrator-restorable. Published version history is read-only; there is no rollback action.
 
 Every write carries an expected revision to reject stale edits and conflicting decisions with HTTP 409. Reviewers and publishers must act on the exact submitted hash. Nonexistent and unauthorized objects return the same not-found response. Audit events exclude task prompts, tokens, and presentation contents.
 
@@ -65,7 +75,7 @@ The HTTP implementation generates `docs/openapi.json`; its Pydantic request/resp
 | --- | --- |
 | `/auth/*`, `/api/me` | login/logout, current session, CSRF token |
 | `/api/skills` | list/create; library and owner filters; ZIP import |
-| `/api/skills/{id}` | authorized details, draft metadata, soft delete/restore, visibility reduction, rollback |
+| `/api/skills/{id}` | authorized details, draft metadata, soft delete/restore, visibility reduction |
 | `/api/versions/{id}/files` | inventory; safe read/edit/upload/delete in Draft |
 | `/api/versions/{id}/submit`, `/review`, `/publish`, `/lifecycle` | role-checked state transitions bound to revisions |
 | `/api/versions/{id}/diff` | text diffs and binary change inventory |
@@ -107,7 +117,7 @@ The original skill requires OpenAI Presentations. Record that dependency and do 
 
 Before each milestone commit, run the appropriate checks:
 
-* Backend HTTP integration tests: ZIP handling, access by direct URL, editing and conflicts, review/self-review, exact-hash approval, visibility changes, immutable publication, versions/diffs, rollback, delete/restore, deprecation/archive, and audit history.
+* Backend HTTP integration tests: ZIP handling, access by direct URL, editing and conflicts, review/self-review, exact-hash approval, visibility changes, immutable publication, versions/diffs, rejected rollback actions, delete/restore, deprecation/archive, and audit history.
 * Connector integration tests against the running API: MCP initialization/tool discovery, pending/declined/approved installs, no package before consent, hash mismatch, repeat use/update policy, tampered cache, changed dependencies, revoked access, and network failure.
 * Browser checks: create/import/edit/review/publish, file preview, navigation, errors, and responsive layout. Keep a local screenshot as verification evidence.
 * Generate and parse all three client configurations. Actual host discovery/model routing and company OIDC require configured client sessions and identity provider access; distinguish these from protocol-level tests.
